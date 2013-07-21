@@ -1,0 +1,61 @@
+A = Button 1
+
+B = Button 2
+
+X = Button 3
+
+Y = Button 4
+
+LB = Button 5
+
+RB = Button 6
+
+BACK = Button 7
+
+START = Button 8
+
+Left Stick Press = Button 9
+
+Right Stick Press = Button 10
+
+Left Stick Up/Dn = 2 Axis (Dn+)
+
+Left Stick L/R = Axis 1 (L-)
+
+Right Stick Up/Dn = Axis 5 (Dn+)
+
+Right Stick L/R = Axis 4 (L-)
+
+Left Trigger = Axis 3 (+)
+
+Right Trigger = Axis 3 (-)
+
+Gamepad Up = Axis 2(-)
+
+Gamepad Dn = Axis 2(+)
+
+Gamepad L = Axis 6(-)
+
+Gamepad R = Axis 6(+)
+
+NOTE: Mode switch changes Axis 2 between Left Stick Up/Dn and Gamepad Up/Dn
+
+
+XInput (X)
+
+
+XInput is the preinstalled, modern gamepad standard on Windows 7 and Vista. It can also be installed on Windows XP (SP1 or greater).
+
+
+Use XInput to play games in Windows whenever possible. This input mode is intended to make the gamepad work natively with modern games.
+
+
+If you're playing a new game with the F310 gamepad, we suggest you set the Input Mode switch to "X". If you want to customize the input functionality, try using DirectInput mode instead.
+
+DirectInput (D)
+
+DirectInput mode works with Windows drivers to enable basic input functionality. This input mode also lets you use the Logitech Gaming Software to customize the inputs for games that don't normally allow you to do so, or don't have gamepad support at all.
+
+You can use the Logitech Gaming Software with DirectInput mode to assign a specific key or key combination to any of the buttons or thumbsticks on the gamepad. You can also assign each thumbstick to work like a joystick or mouse.
+
+NOTE: Logitech doesn't provide configuration software for non-Windows systems, but many games allow you to configure inputs in-game. DirectInput mode lets the gamepad communicate with the drivers on many such systems.
