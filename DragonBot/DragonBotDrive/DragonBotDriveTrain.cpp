@@ -49,7 +49,7 @@ class DragonBotDriveTrain : public IterativeRobot
 	
 	static const int SMOKE_MACHINE_RELAY = 1;
 	
-	static const int TOPHEAD_LIMIT_PIN = 1;
+	static const int TOPHEAD_LIMIT_PIN = 4;
 	static const int BOTTOMJAW_LIMIT_PIN = 2;
 	static const int CRASH_LIMIT_PIN = 3;
 	
@@ -59,8 +59,10 @@ class DragonBotDriveTrain : public IterativeRobot
 	static const float SMOKE_CANNON_SPEED = 0.4f;
 	static const int MAKE_SMOKE_BUTTON = 4;
 	static const int HEAD_UP_BUTTON = 6; //right bumper
-	static const int HEAD_DOWN_BUTTON = 5; //left bumper
+	static const int JAW_UP_BUTTON = 5; //left bumper
 	static const int EYE_LOCK_BUTTON = 1; //Much to Steven's chagrin
+	
+	
 	
 	//static const float JAWHEAD_MOTOR_SPEED = 0.2f;
 	
@@ -81,6 +83,19 @@ class DragonBotDriveTrain : public IterativeRobot
 	DigitalInput * crash_limit;
 	//bool makingSmoke;
 	
+	bool can_move_head_up()
+	{
+		return tophead_limit->Get();
+	}
+	bool can_move_head_down(){
+		return bottomjaw_limit->Get();
+	}
+	bool can_move_jaw_up(){
+		return crash_limit->Get();
+	}
+	bool can_move_jaw_down(){
+		return bottomjaw_limit->Get();
+	}
 	
 public:
 	DragonBotDriveTrain(void)	{
@@ -201,7 +216,6 @@ public:
 		//float right_eye_y_axis = (right_joystick_y+1)*60;
 		//right_eye_y->SetAngle(right_eye_y_axis);
 
-		//Head and Jaw Code
 		/*
 		bool rbutton = gamepad2->GetNumberedButton(HEAD_UP_BUTTON);
 		bool lbutton = gamepad2->GetNumberedButton(HEAD_DOWN_BUTTON);
@@ -217,28 +231,34 @@ public:
 		}
 		*/
 
+		//REAL head & jaw code
 		//move head down
-		if(gamepad2->GetRightX()>=0.5f && !crash_limit->Get() && !bottomjaw_limit->Get()){
-			head_motor->Set(-0.2f);
-			jaw_motor->Set(-0.2f);
+		if(gamepad2->GetRightX()<=-0.5f && can_move_head_down() && can_move_jaw_down()){
+			head_motor->Set(-0.3f);
+			jaw_motor->Set(0.3f);
 		}
 		//move head up
-		else if(gamepad2->GetNumberedButton(HEAD_UP_BUTTON) && !tophead_limit->Get()){
-			head_motor->Set(0.2f);
-			jaw_motor->Set(0.2f);
+		else if(gamepad2->GetNumberedButton(HEAD_UP_BUTTON) && can_move_head_up()){
+			head_motor->Set(0.3f);
+			jaw_motor->Set(-0.3f);
 		}
 		//move jaw down
-		else if(gamepad2->GetRightX()<=-0.5f && !bottomjaw_limit->Get()){
-			jaw_motor->Set(-0.2f);
+		else if(gamepad2->GetRightX()>=0.5f && can_move_jaw_down()){
+			jaw_motor->Set(0.3f);
 		}
 		//move jaw up
-		else if(gamepad2->GetNumberedButton(HEAD_DOWN_BUTTON) && !crash_limit->Get()){
-			jaw_motor->Set(0.2f);
+		else if(gamepad2->GetNumberedButton(JAW_UP_BUTTON) && can_move_jaw_up()){
+			jaw_motor->Set(-0.3f);
 		}
+		//sets to zero if no buttons pressed
 		else {
 			jaw_motor->Set(0.0f);
 			head_motor->Set(0.0f);
 		}
+		
+		
+		lcd->PrintfLine(DriverStationLCD::kUser_Line6, "b:%d t:%d c:%d", bottomjaw_limit->Get(), tophead_limit->Get(), crash_limit->Get());
+		
 		
 
 		//Smoke code
