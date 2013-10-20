@@ -5,8 +5,8 @@
  *		-Right joystick rotates.
  *		
  *	Gamepad 2 (Lettered buttons)
- *		-Joysticks control eyes.
- *		-A syncs eyes (control with left joystick)
+ *		-Left joystick controls eyes.
+ *		-A locks eyes
  *		-B shoots smoke.
  *		-Y makes smoke.
  *		-RB and RT move head and jaw up and down respectively.
@@ -20,10 +20,9 @@
  *	button control right and left respectively. On the right joystick, left and right control
  *	rotating left and right respectively.
  *	
- *	On the other gamepad (with lettered buttons), it's more complex. Hold A (green button) to sync eyes
- *	(control with left joystick). Hold B for a short time(red button) to shoot smoke. 
- *	Hold Y (yellow) to make smoke. The left joystick controls the left eye (they only move left and right); 
- *	the right joystick controls the right eye (they only move right and left). RB moves the head and jaw up; 
+ *	On the other gamepad (with lettered buttons), it's more complex. Press A (green button) to lock eyes
+ *	in their current position. Hold B for a short time(red button) to shoot smoke. 
+ *	Hold Y (yellow) to make smoke. Moving the left joystick right changes eye position. RB moves the head and jaw up; 
  *	however, RT moves the head and jaw down. Holding the LB moves the jaw up; holding the LT moves the jaw down. 
  *	The D-pad controls sounds; unfortunately, this has not been implemented as of yet. 
  */
@@ -60,9 +59,12 @@ class DragonBotDriveTrain : public IterativeRobot
 	static const int MAKE_SMOKE_BUTTON = 4;
 	static const int HEAD_UP_BUTTON = 6; //right bumper
 	static const int JAW_UP_BUTTON = 5; //left bumper
-	static const int EYE_LOCK_BUTTON = 1; //Much to Steven's chagrin
-	
-	
+	static const int EYE_LOCK_BUTTON = 1; 
+	static const float LEFT_EYE_OFFSET = 0.0f; //TODO: figure this out
+	float default_eye_position;
+	float right_eye_val;
+	float left_eye_val;
+	static const float SPEED_LIMIT = 0.6f;
 	
 	//static const float JAWHEAD_MOTOR_SPEED = 0.2f;
 	
@@ -82,6 +84,7 @@ class DragonBotDriveTrain : public IterativeRobot
 	DigitalInput * bottomjaw_limit;
 	DigitalInput * crash_limit;
 	//bool makingSmoke;
+	
 	
 	bool can_move_head_up()
 	{
@@ -124,6 +127,8 @@ public:
 		tophead_limit = new DigitalInput(TOPHEAD_LIMIT_PIN);
 		bottomjaw_limit = new DigitalInput(BOTTOMJAW_LIMIT_PIN);
 		crash_limit = new DigitalInput(CRASH_LIMIT_PIN);
+		
+		default_eye_position = 15.0f; //TODO: figure this out
 		
 	}
 	
@@ -177,7 +182,7 @@ public:
 				rot = 0;
 			}
 		
-		drive->MecanumDrive_Cartesian(x,y,rot);
+		drive->MecanumDrive_Cartesian(SPEED_LIMIT * x, SPEED_LIMIT * y, SPEED_LIMIT * rot);
 		
 		//shoot smoke if button is pressed
 		if (gamepad2->GetNumberedButton(FIRE_SMOKE_BUTTON)){
@@ -194,23 +199,33 @@ public:
 			lcd->PrintfLine(DriverStationLCD::kUser_Line5, "Not shooting");
 
 		}
+		//Eye Code
+		
+//		float eye_pos = gamepad2->GetLeftX();
+//		
+//		right_eye_x->Set((eye_pos * 60) + default_eye_position);
+//		left_eye_x->Set((eye_pos * 60) + default_eye_position - LEFT_EYE_OFFSET);
+//		
+//		//button lock code
+//		if(gamepad2->GetNumberedButtonPressed(EYE_LOCK_BUTTON)){
+//			default_eye_position = eye_pos;
+//		}
+//		
+		
 		
 		//left eye control
-		float left_joystick_x = gamepad2->GetLeftX();
-		float left_eye_x_axis = (1 - left_joystick_x)*60;
-		left_eye_x->SetAngle(left_eye_x_axis);
-
-		//float left_joystick_y = gamepad2->GetLeftY();
-		//float left_eye_y_axis = (left_joystick_y+1)*60;
-		//left_eye_y->SetAngle(left_eye_y_axis);
-
-		//right eye control
-		float right_joystick_x = gamepad2->GetRawAxis(4);
-		if (gamepad2->GetNumberedButton(EYE_LOCK_BUTTON)){
-			right_joystick_x = left_joystick_x;
+		//If A isn't pressed the value should stay the same as before
+		if (!gamepad2->GetNumberedButton(1)){
+			float left_joystick_x = gamepad2->GetLeftX();
+			float left_eye_x_axis = (1 - left_joystick_x)*60;
+			left_eye_val = left_eye_x_axis + 50;
+			
+			float right_joystick_x = gamepad2->GetRawAxis(4);//right x axis
+			float right_eye_x_axis = (1-right_joystick_x)*60;
+			right_eye_val = right_eye_x_axis+20;
 		}
-		float right_eye_x_axis = (-right_joystick_x+1)*60;
-		right_eye_x->SetAngle(right_eye_x_axis);
+		left_eye_x->SetAngle(left_eye_val);		
+		right_eye_x->SetAngle(right_eye_val);
 		
 		//float right_joystick_y = gamepad2->GetRawAxis(4);
 		//float right_eye_y_axis = (right_joystick_y+1)*60;
@@ -218,7 +233,7 @@ public:
 
 		/*
 		bool rbutton = gamepad2->GetNumberedButton(HEAD_UP_BUTTON);
-		bool lbutton = gamepad2->GetNumberedButton(HEAD_DOWN_BUTTON);
+		bool lbutton = gamepad2->Ge tNumberedButton(HEAD_DOWN_BUTTON);
 		if (rbutton){
 			lcd->PrintfLine(DriverStationLCD::kUser_Line6, "rb pressed");
 			jaw_motor->Set(0.2f);
@@ -270,7 +285,7 @@ public:
 		else
 		{
 			lcd->PrintfLine(DriverStationLCD::kUser_Line4, "not smoke");
-			smoke_machine->Set(Relay::kOff);
+			smoke_machine->Set(false);
 		}
 		
 		lcd->PrintfLine(DriverStationLCD::kUser_Line1, "x:%f", x);
