@@ -84,6 +84,9 @@ class DragonBotDriveTrain : public IterativeRobot
 	DigitalInput * bottomjaw_limit;
 	DigitalInput * crash_limit;
 	//bool makingSmoke;
+	Timer * making_smoke_timer;
+	Timer * firing_smoke_timer;
+	static const int MAX_EXCESS_SMOKE_TIME = 2;
 	
 	
 	bool can_move_head_up()
@@ -129,6 +132,10 @@ public:
 		crash_limit = new DigitalInput(CRASH_LIMIT_PIN);
 		
 		default_eye_position = 15.0f; //TODO: figure this out
+		
+		making_smoke_timer = new Timer();
+		firing_smoke_timer = new Timer();
+		
 		
 	}
 	
@@ -190,13 +197,16 @@ public:
 			//makingSmoke = !makingSmoke;
 			smoke_cannon->Set(SMOKE_CANNON_SPEED);
 			lcd->PrintfLine(DriverStationLCD::kUser_Line5, "Shooting");
-
+				
+			firing_smoke_timer->Start(); //measure how long we've fired smoke, so we know if it's ok to make more
 			
 		}
 		else
 		{
 			smoke_cannon->Set(0.0f);
 			lcd->PrintfLine(DriverStationLCD::kUser_Line5, "Not shooting");
+			firing_smoke_timer->Stop(); //stop the timer, since we're not firing smoke.
+										//don't reset, cuz we need to how much smoke we've fired.
 
 		}
 		//Eye Code
@@ -279,13 +289,29 @@ public:
 		//Smoke code
 		if (gamepad2->GetNumberedButton(MAKE_SMOKE_BUTTON)){
 			//MAKE SMOKE!!!!!!!!!!!
-			lcd->PrintfLine(DriverStationLCD::kUser_Line4, "smoke");
-			smoke_machine->Set(true);
+			//only if we don't have too much excess smoke
+			if (making_smoke_timer->Get() - firing_smoke_timer->Get() < MAX_EXCESS_SMOKE_TIME){
+				lcd->PrintfLine(DriverStationLCD::kUser_Line4, "smoke");
+				smoke_machine->Set(true);
+			} else {
+				lcd->PrintfLine(DriverStationLCD::kUser_Line4, "too much smoke");
+				smoke_machine->Set(false);
+			}
+			making_smoke_timer->Start(); //measure how long we've been making smoke, so we don't overflow the machine
+										//doesn't do anything if we've already started the timer
 		}
 		else
 		{
 			lcd->PrintfLine(DriverStationLCD::kUser_Line4, "not smoke");
 			smoke_machine->Set(false);
+			making_smoke_timer->Stop(); 	//stop the timer, since we're not making smoke
+											//don't reset it, cuz we need to know how much smoke we've made
+		}
+		
+		//if both timers are the same, we can set them both to zero to ensure we don't overflow them or something
+		if (making_smoke_timer->Get() == firing_smoke_timer->Get()){
+			making_smoke_timer->Reset();
+			firing_smoke_timer->Reset();
 		}
 		
 		lcd->PrintfLine(DriverStationLCD::kUser_Line1, "x:%f", x);
