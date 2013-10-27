@@ -147,7 +147,10 @@ public:
 	}
 	
 	void DisabledInit(void) {
-
+		making_smoke_timer->Stop();
+		making_smoke_timer->Reset();
+		firing_smoke_timer->Stop();
+		firing_smoke_timer->Reset();
 	}
 
 	void AutonomousInit(void) {
